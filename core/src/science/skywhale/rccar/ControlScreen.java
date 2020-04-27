@@ -10,40 +10,40 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import java.io.IOException;
-import java.net.SocketException;
 
 public class ControlScreen implements Screen
 {
 	private NetworkDude udp;
 	private OrthographicCamera camera;
-	//private ShapeRenderer shapeRenderer;
 	private SpriteBatch batch;
 	private BitmapFont font;
+	private ShapeRenderer shapeRenderer;
 	private InputMultiplexer inputMultiplexer;
 	private byte[] inputs;
+	private int[] initialY;
 	private float timeSincePacket, timeBetweenPackets;
 	private String toDraw;
 	
 	public ControlScreen ()
 	{
-		
 		timeBetweenPackets = 0.1f;
 		timeSincePacket = -60f;
 		inputs = new byte[] {0, 0};
+		initialY = new int[] {Gdx.graphics.getHeight()/2, Gdx.graphics.getHeight()/2};
 		camera = new OrthographicCamera();
-		//shapeRenderer = new ShapeRenderer();
 		batch = new SpriteBatch();
 		font = new BitmapFont();
+		shapeRenderer = new ShapeRenderer();
+		shapeRenderer.setProjectionMatrix(camera.combined);
 		inputMultiplexer = new InputMultiplexer();
 		inputMultiplexer.addProcessor(new TouchInput(this));
 		Gdx.input.setInputProcessor(inputMultiplexer);
 		
-		//TODO confirm 192.168.0.1 is the car before spamming it with tiny packets
 		try
 		{
 			udp = new NetworkDude();
 		}
-		catch (SocketException e)
+		catch (Exception e)
 		{
 			e.printStackTrace();
 			System.exit(1);
@@ -59,7 +59,7 @@ public class ControlScreen implements Screen
 		
 		if (Gdx.graphics.getDeltaTime() - timeSincePacket >= timeBetweenPackets)
 		{
-			toDraw = "Left: " + inputs[0] + "\nRight: " + inputs[1] + "\n";
+			toDraw = "Left: " + inputs[0] + "                              Right: " + inputs[1] + "\n";
 			try
 			{
 				udp.send(inputs);
@@ -71,10 +71,22 @@ public class ControlScreen implements Screen
 		}
 		
 		batch.begin();
-		font.draw(batch, toDraw, 100, 100);
+		font.draw(batch, toDraw, Gdx.graphics.getWidth()/2f - 100, Gdx.graphics.getHeight() - 100);
 		batch.end();
+		
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+		shapeRenderer.setColor(1, 1, 1, 1);	//white
+		float halfWidth = Gdx.graphics.getWidth()/2f;
+		//TODO these lines don't always draw for some reason?
+		shapeRenderer.rect(0, initialY[0], halfWidth, 100);
+		shapeRenderer.rect(halfWidth, initialY[0], halfWidth, 100);
+		shapeRenderer.end();
 	}
 	
+	public void setInitialY (int side, int value)
+	{
+		initialY[side] = value;
+	}
 	public void setInput (int side, byte value)
 	{
 		inputs[side] = value;
@@ -93,7 +105,7 @@ public class ControlScreen implements Screen
 	@Override
 	public void resize (int width, int height)
 	{
-	
+		shapeRenderer.setProjectionMatrix(camera.combined);
 	}
 	
 	@Override

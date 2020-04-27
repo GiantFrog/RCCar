@@ -62,6 +62,7 @@ public class TouchInput implements InputProcessor
 		if (upperBoxSize[pointer] < 1) upperBoxSize[pointer] = 1;
 		if (lowerBoxSize[pointer] < 1) lowerBoxSize[pointer] = 1;
 		
+		screen.setInitialY(side[pointer], y);
 		return true;
 	}
 	
